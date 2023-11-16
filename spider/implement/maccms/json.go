@@ -23,7 +23,12 @@ func (m *IMacCMS) gjsonResult2Time(r gjson.Result, key string) time.Time {
 	return t
 }
 
-func (m *IMacCMS) JsonParseBody(result gjson.Result) (IMacCMSListAttr, []IMacCMSListVideoItem, []repos.IMacCMSCategory) {
+func (m *IMacCMS) JsonParseBody(result *gjson.Result) (IMacCMSListAttr, []IMacCMSListVideoItem, []repos.IMacCMSCategory) {
+
+	// NOTE(d1y): `result` 传递过来之前不能是 nil
+	if result == nil {
+		panic("maccms json parse body result is nil")
+	}
 
 	var attr = IMacCMSListAttr{}
 	ints := typekkkit.Int64Slice2Int(result.Get("pagecount").Int(), result.Get("page").Int(), result.Get("total").Int(), result.Get("limit").Int())
@@ -64,11 +69,12 @@ func (m *IMacCMS) JsonParseBody(result gjson.Result) (IMacCMSListAttr, []IMacCMS
 	return attr, videos, category
 }
 
-func (m *IMacCMS) byte2gjson(buf []byte) (gjson.Result, error) {
+func (m *IMacCMS) byte2gjson(buf []byte) (*gjson.Result, error) {
 	if !gjson.ValidBytes(buf) {
-		return gjson.Result{}, errors.New("invalid json")
+		return nil, errors.New("invalid json")
 	}
-	return gjson.ParseBytes(buf), nil
+	js := gjson.ParseBytes(buf)
+	return &js, nil
 }
 
 func (m *IMacCMS) JSONGetHome(page int, tid ...int) (IMacCMSHomeData, error) {
